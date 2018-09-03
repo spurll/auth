@@ -2,6 +2,7 @@ from flask import redirect, request
 from string import ascii_letters, digits
 from urllib.parse import urljoin
 from random import SystemRandom
+from json import dumps
 
 from auth import app, db
 from auth.models import User, find_user
@@ -13,6 +14,30 @@ email = Email(
     app.config['SMTP_USER'],
     app.config['SMTP_PASSWORD']
 )
+
+
+@app.route('/', methods=['POST'])
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    user = find_user(data['id'])
+
+    if not user:
+        message = 'Error: user "{}" does not exist'.format(data['id'])
+        print(message)
+        return message, 400
+
+    if not user.email_verified:
+        message = 'Error: user "{}" must verify their email'.format(data['id'])
+        print(message)
+        return message, 400
+
+    if not user.check_password(data['password']):
+        message = 'Error: invalid password'
+        print(message)
+        return message, 403
+
+    return dumps({'id': user.id, 'email': user.email, 'name': user.name}), 200
 
 
 @app.route('/new', methods=['POST'])
@@ -49,29 +74,6 @@ def new():
     )
 
     email.send_verification(user, url)
-
-    return 'Success', 200
-
-
-@app.route('/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    user = find_user(data['id'])
-
-    if not user:
-        message = 'Error: user "{}" does not exist'.format(data['id'])
-        print(message)
-        return message, 400
-
-    if not user.email_verified:
-        message = 'Error: user "{}" must verify their email'.format(data['id'])
-        print(message)
-        return message, 400
-
-    if not user.check_password(data['password']):
-        message = 'Error: invalid password'
-        print(message)
-        return message, 403
 
     return 'Success', 200
 
