@@ -20,20 +20,22 @@ email = Email(
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
+    print(data)
     user = find_user(data['id'])
+    print(user)
 
     if not user:
-        message = 'Error: user "{}" does not exist'.format(data['id'])
+        message = 'user "{}" does not exist'.format(data['id'])
         print(message)
         return message, 400
 
     if not user.email_verified:
-        message = 'Error: user "{}" must verify their email'.format(data['id'])
+        message = 'user "{}" must verify their email'.format(data['id'])
         print(message)
         return message, 400
 
     if not user.check_password(data['password']):
-        message = 'Error: invalid password'
+        message = 'invalid password'
         print(message)
         return message, 403
 
@@ -46,17 +48,17 @@ def new():
 
     # Ensure that one user can't use another user's email as their ID
     if '@' in data['id']:
-        message = 'Error: username cannot contain "@"'
+        message = 'username cannot contain "@"'
         print(message)
         return message, 400
 
     if User.query.get(data['id']):
-        message = 'Error: user "{}" already exists'.format(data['id'])
+        message = 'user "{}" already exists'.format(data['id'])
         print(message)
         return message, 400
 
     if User.query.filter_by(email=data['email']).one_or_none():
-        message = 'Error: email "{}" already exists'.format(data['email'])
+        message = 'email "{}" already exists'.format(data['email'])
         print(message)
         return message, 400
 
@@ -75,7 +77,7 @@ def new():
 
     email.send_verification(user, url)
 
-    return 'Success', 200
+    return 'success', 200
 
 
 @app.route('/forgot-password', methods=['POST'])
@@ -84,12 +86,12 @@ def forgot_password():
     user = find_user(data['id'])
 
     if not user:
-        message = 'Error: user "{}" does not exist'.format(data['id'])
+        message = 'user "{}" does not exist'.format(data['id'])
         print(message)
         return message, 400
 
     if not user.email_verified:
-        message = 'Error: user "{}" must verify their email'.format(data['id'])
+        message = 'user "{}" must verify their email'.format(data['id'])
         print(message)
         return message, 400
 
@@ -101,7 +103,7 @@ def forgot_password():
 
     email.send_password(user, password)
 
-    return 'Success', 200
+    return 'success', 200
 
 
 @app.route('/update-password', methods=['POST'])
@@ -110,24 +112,24 @@ def update_password():
     user = find_user(data['id'])
 
     if not user:
-        message = 'Error: user "{}" does not exist'.format(data['id'])
+        message = 'user "{}" does not exist'.format(data['id'])
         print(message)
         return message, 400
 
     if not user.email_verified:
-        message = 'Error: user "{}" must verify their email'.format(data['id'])
+        message = 'user "{}" must verify their email'.format(data['id'])
         print(message)
         return message, 400
 
     if not user.check_password(data['password']):
-        message = 'Error: invalid password'
+        message = 'invalid password'
         print(message)
         return message, 403
 
     user.set_password(data['new-password'])
     db.session.commit()
 
-    return 'Success', 200
+    return 'success', 200
 
 
 @app.route('/update-email', methods=['POST'])
@@ -136,17 +138,17 @@ def update_email():
     user = find_user(data['id'])
 
     if not user:
-        message = 'Error: user "{}" does not exist'.format(data['id'])
+        message = 'user "{}" does not exist'.format(data['id'])
         print(message)
         return message, 400
 
     if not user.email_verified:
-        message = 'Error: user "{}" must verify their email'.format(data['id'])
+        message = 'user "{}" must verify their email'.format(data['id'])
         print(message)
         return message, 400
 
     if not user.check_password(data['password']):
-        message = 'Error: invalid password'
+        message = 'invalid password'
         print(message)
         return message, 403
 
@@ -163,7 +165,7 @@ def update_email():
 
     email.send_verification(user, url)
 
-    return 'Success', 200
+    return 'success', 200
 
 
 @app.route('/verify-email/<key>', methods=['GET'])
@@ -171,7 +173,7 @@ def verify_email(key):
     user = User.query.filter_by(email_verification_key=key).one_or_none()
 
     if not user:
-        message = 'Error: invalid verification key'
+        message = 'invalid verification key'
         print(message)
         return message, 400
 
@@ -179,5 +181,5 @@ def verify_email(key):
     db.session.commit()
 
     next = request.args.get('next')
-    return redirect(next) if next else 'Success', 200
+    return redirect(next) if next else 'success', 200
 
