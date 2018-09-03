@@ -20,9 +20,7 @@ email = Email(
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    print(data)
     user = find_user(data['id'])
-    print(user)
 
     if not user:
         message = 'user "{}" does not exist'.format(data['id'])
@@ -52,15 +50,29 @@ def new():
         print(message)
         return message, 400
 
-    if User.query.get(data['id']):
+    id_user = User.query.get(data['id'])
+    email_user = User.query.filter_by(email=data['email']).one_or_none()
+
+    if email_user and email_user.email_verified:
+        message = 'email "{}" already exists'.format(data['email'])
+        print(message)
+        return message, 400
+
+    elif id_user and id_user.email_verified:
         message = 'user "{}" already exists'.format(data['id'])
         print(message)
         return message, 400
 
-    if User.query.filter_by(email=data['email']).one_or_none():
-        message = 'email "{}" already exists'.format(data['email'])
-        print(message)
-        return message, 400
+    else:
+        if email_user:
+            print('removing unverified user {}'.format(email_user))
+            db.session.delete(email_user)
+
+        if id_user:
+            print('removing unverified user {}'.format(id_user))
+            db.session.delete(id_user)
+
+        db.session.commit()
 
     user = User(data['id'], data['email'], data['password'], data['name'])
 
@@ -76,6 +88,28 @@ def new():
     )
 
     email.send_verification(user, url)
+
+    return 'please check your email to verify your account', 200
+
+
+@app.route('/delete', methods=['POST'])
+def delete():
+    data = request.get_json()
+    user = find_user(data['id'])
+
+    if not user.check_password(data['password']):
+        message = 'invalid password'
+        print(message)
+        return message, 403
+
+    if not user:
+        message = 'user "{}" does not exist'.format(data['id'])
+        print(message)
+        return message, 400
+
+    print('removing verified user {}'.format(email_user))
+    db.session.delete(email_user)
+    db.session.commit()
 
     return 'success', 200
 
