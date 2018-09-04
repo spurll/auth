@@ -3,6 +3,7 @@ from string import ascii_letters, digits
 from urllib.parse import urljoin
 from random import SystemRandom
 from json import dumps
+from datetime import datetime
 
 from auth import app, db
 from auth.models import User, find_user
@@ -28,7 +29,7 @@ def login():
         return message, 400
 
     if not user.email_verified:
-        message = 'user "{}" must verify their email'.format(data['id'])
+        message = 'you must verify your email before logging in'
         print(message)
         return message, 400
 
@@ -36,6 +37,9 @@ def login():
         message = 'invalid password'
         print(message)
         return message, 403
+
+    user.last_login = datetime.utcnow()
+    db.session.commit()
 
     return dumps({'id': user.id, 'email': user.email, 'name': user.name}), 200
 
@@ -53,23 +57,23 @@ def new():
     id_user = User.query.get(data['id'])
     email_user = User.query.filter_by(email=data['email']).one_or_none()
 
-    if email_user and email_user.email_verified:
-        message = 'email "{}" already exists'.format(data['email'])
+    if id_user and id_user.activated:
+        message = 'user "{}" already exists'.format(data['id'])
         print(message)
         return message, 400
 
-    elif id_user and id_user.email_verified:
-        message = 'user "{}" already exists'.format(data['id'])
+    elif email_user and email_user.activated:
+        message = 'email "{}" already exists'.format(data['email'])
         print(message)
         return message, 400
 
     else:
         if email_user:
-            print('removing unverified user {}'.format(email_user))
+            print('removing inactive user "{}"'.format(email_user))
             db.session.delete(email_user)
 
         if id_user:
-            print('removing unverified user {}'.format(id_user))
+            print('removing inactive user "{}"'.format(id_user))
             db.session.delete(id_user)
 
         db.session.commit()
@@ -82,7 +86,7 @@ def new():
     next = data.get('next')
     url = urljoin(
         app.config['BASE_URL'],
-        '/verify-email/{}{}'.format(
+        'verify-email/{}{}'.format(
             user.email_verification_key, '?next=' + next if next else ''
         )
     )
@@ -107,7 +111,7 @@ def delete():
         print(message)
         return message, 400
 
-    print('removing verified user {}'.format(email_user))
+    print('removing verified user "{}"'.format(email_user))
     db.session.delete(email_user)
     db.session.commit()
 
@@ -125,7 +129,7 @@ def forgot_password():
         return message, 400
 
     if not user.email_verified:
-        message = 'user "{}" must verify their email'.format(data['id'])
+        message = 'you must verify email before resetting your password'
         print(message)
         return message, 400
 
@@ -151,7 +155,7 @@ def update_password():
         return message, 400
 
     if not user.email_verified:
-        message = 'user "{}" must verify their email'.format(data['id'])
+        message = 'you must verify your email before updating your password'
         print(message)
         return message, 400
 
@@ -176,11 +180,6 @@ def update_email():
         print(message)
         return message, 400
 
-    if not user.email_verified:
-        message = 'user "{}" must verify their email'.format(data['id'])
-        print(message)
-        return message, 400
-
     if not user.check_password(data['password']):
         message = 'invalid password'
         print(message)
@@ -192,7 +191,7 @@ def update_email():
     next = data.get('next')
     url = urljoin(
         app.config['BASE_URL'],
-        '/verify-email/{}{}'.format(
+        'verify-email/{}{}'.format(
             user.email_verification_key, '?next=' + next if next else ''
         )
     )
