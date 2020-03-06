@@ -101,15 +101,15 @@ def delete():
     data = request.get_json()
     user = find_user(data['id'])
 
-    if not user.check_password(data['password']):
-        message = 'invalid password'
-        print(message)
-        return message, 403
-
     if not user:
         message = 'user "{}" does not exist'.format(data['id'])
         print(message)
         return message, 400
+
+    if not user.check_password(data['password']):
+        message = 'invalid password'
+        print(message)
+        return message, 403
 
     print('removing verified user "{}"'.format(user))
     db.session.delete(user)
