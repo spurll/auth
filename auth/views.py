@@ -111,8 +111,8 @@ def delete():
         print(message)
         return message, 400
 
-    print('removing verified user "{}"'.format(email_user))
-    db.session.delete(email_user)
+    print('removing verified user "{}"'.format(user))
+    db.session.delete(user)
     db.session.commit()
 
     return 'success', 200
