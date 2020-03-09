@@ -15,4 +15,5 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 SMTP_HOST = 'smtp.gmail.com:587'
 SMTP_USER = 'your.email@gmail.com'
 SMTP_PASSWORD = 'app.specific.password'
+SMTP_FROM_NAME = 'Authentication System'
 

@@ -4,10 +4,11 @@ from smtplib import SMTP
 
 
 class Email:
-    def __init__(self, host, user, password):
+    def __init__(self, host, user, password, name=None):
         self.host = host
         self.user = user
         self.password = password
+        self.name = name or self.user
 
     def connect(self):
         smtp = SMTP(self.host)
@@ -28,7 +29,7 @@ class Email:
 
         message['subject'] = subject
         message['to'] = to
-        message['from'] = self.user
+        message['from'] = f'{self.name} <{self.user}>'
 
         smtp.send_message(message)
         smtp.close()

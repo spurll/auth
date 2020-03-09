@@ -13,7 +13,8 @@ from auth.email import Email
 email = Email(
     app.config['SMTP_HOST'],
     app.config['SMTP_USER'],
-    app.config['SMTP_PASSWORD']
+    app.config['SMTP_PASSWORD'],
+    app.config['SMTP_FROM_NAME']
 )
 
 
