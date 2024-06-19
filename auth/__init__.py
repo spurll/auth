@@ -11,7 +11,8 @@ db = SQLAlchemy(app)
 # 2. Import the models. (The schema will need to import the SQLAlchemy object.)
 # 3. Ensure that the tables are created. (Models must be imported first.)
 from auth import models
-db.create_all()
+with app.app_context():
+    db.create_all()
 
 
 from auth import views
